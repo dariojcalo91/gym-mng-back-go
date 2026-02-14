@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS members;
+DROP TYPE IF EXISTS member_status;

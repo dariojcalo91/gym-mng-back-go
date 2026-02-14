@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package gym;
+
+option go_package = "./proto";
+
+service GymService {
+  // Dashboard: register a new member
+  rpc CreateMember (MemberRequest) returns (MemberResponse);
+  // Can the member Check-in?
+  rpc GetMemberStatus (IdRequest) returns (MemberResponse);
+}
+
+message MemberRequest {
+  string name = 1;
+  string email = 2;
+  string plan = 3; // Ex: "Monthly", "VIP"
+}
+
+message MemberResponse {
+  string id = 1;
+  string name = 2;
+  string status = 3; // "Active", "Expired"
+  string message = 4;
+}
+
+message IdRequest {
+  string id = 1;
+}

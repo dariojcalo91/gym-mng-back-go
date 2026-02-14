@@ -1,0 +1,36 @@
+# Binaries and executables
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# The specific test script
+cmd/client_test/main.go
+
+# Environment Variables (SECURITY)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Go Dependencies (only if you use vendor/, if not, it's not necessary)
+vendor/
+
+# Logs
+*.log
+
+# Docker
+.docker/
+
+# IDEs (VSCode, JetBrains)
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS específicos
+.DS_Store
+Thumbs.db

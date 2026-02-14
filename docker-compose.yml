@@ -1,0 +1,64 @@
+services:
+  # local BD for development
+  db:
+    image: postgres:15-alpine
+    container_name: gym_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "${DB_PORT}:${DB_PORT}"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      # This command verifies if the DB is accepting connections
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gym-network
+
+  # Migration service
+  migrate:
+    image: migrate/migrate
+    volumes:
+      - ./migrations:/migrations
+    networks:
+      - gym-network # Ensure to define a network or use the default one
+    command: 
+      - -path=/migrations/
+      - -database=postgres://gopher:gympassword@db:5432/gym_management?sslmode=disable
+      - up
+    depends_on:
+      db:
+        condition: service_healthy # <-- CLAVE: No arranca hasta que el healthcheck pase
+
+  # Backend service
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: gym_backend
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully # <-- KEY: It doesn't start until the 'members' table exists
+    ports:
+      - "50051:50051" # gRPC port
+    environment:
+      # Note how we use the service name 'db' instead of 'localhost'
+      DATABASE_URL: "postgres://gopher:gympassword@db:5432/gym_management?sslmode=disable"
+    networks:
+      - gym-network
+
+# Here we define the network and volume for our services
+networks:
+  gym-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
