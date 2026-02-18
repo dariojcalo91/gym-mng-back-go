@@ -44,7 +44,7 @@ under folder: migrations/ use files:
 
 to generate a new migration use:
 
-migrate create -ext sql -dir migrations -seq create_table
+migrate create -ext sql -dir migrations -seq migration_name
 
 ## Goroutines
 1. What is a Goroutine?

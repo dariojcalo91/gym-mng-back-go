@@ -30,7 +30,7 @@ services:
       - gym-network # Ensure to define a network or use the default one
     command: 
       - -path=/migrations/
-      - -database=postgres://gopher:gympassword@db:5432/gym_management?sslmode=disable
+      - -database=postgres://${DB_USER}:${DB_PASSWORD}@db:${DB_PORT}/${DB_NAME}?sslmode=disable
       - up
     depends_on:
       db:
@@ -51,7 +51,7 @@ services:
       - "50051:50051" # gRPC port
     environment:
       # Note how we use the service name 'db' instead of 'localhost'
-      DATABASE_URL: "postgres://gopher:gympassword@db:5432/gym_management?sslmode=disable"
+      DATABASE_URL: "postgres://${DB_USER}:${DB_PASSWORD}@db:${DB_PORT}/${DB_NAME}?sslmode=disable"
     networks:
       - gym-network
 
