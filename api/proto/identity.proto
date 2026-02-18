@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package gym;
+
+option go_package = "./proto";
+
+// Access service (Transient actions)
+service AuthService {
+  rpc Login (LoginRequest) returns (LoginResponse);
+  rpc Logout (LogoutRequest) returns (LogoutResponse);
+}
+
+// Identity service (Entity management)
+service UserService {
+  rpc RegisterUser (RegisterUserRequest) returns (RegisterUserResponse);
+  rpc GetUserProfile (UserRequest) returns (User);
+}
+
+// --- Auth messages ---
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  string token = 1;
+  User user = 2;
+}
+
+message LogoutRequest {
+  string token = 1;
+}
+
+message LogoutResponse {
+  string message = 1;
+}
+
+// --- User messages ---
+message RegisterUserRequest {
+  string username = 1;
+  string password = 2;
+  string role = 3; // "ADMIN", "SUPER_USER", "TRAINER"
+}
+
+message RegisterUserResponse {
+  string user_id = 1;
+  string message = 2;
+}
+
+message UserRequest {
+  string user_id = 1;
+}
+
+message User {
+  string id = 1;
+  string username = 2;
+  string role = 3;
+}
