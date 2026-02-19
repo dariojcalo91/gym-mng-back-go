@@ -7,18 +7,19 @@ import (
 	"os"
 
 	"github.com/dariojcalo91/gym-backend-go-ver/internal/domain"
-	"github.com/dariojcalo91/gym-backend-go-ver/internal/gym"
+	sv "github.com/dariojcalo91/gym-backend-go-ver/internal/service"
 	"github.com/dariojcalo91/gym-backend-go-ver/internal/storage/postgres"
 	pb "github.com/dariojcalo91/gym-backend-go-ver/proto" // Import generated code from the .proto file
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 )
 
 type grpcHandler struct {
 	pb.UnimplementedGymServiceServer
 	pb.UnimplementedUserServiceServer
-	service         *gym.GymService
-	identityService *gym.IdentityService
+	service         *sv.GymService
+	identityService *sv.IdentityService
 }
 
 // Implement methods we defined in .proto file
@@ -47,8 +48,8 @@ func (h *grpcHandler) RegisterUser(ctx context.Context, req *pb.RegisterUserRequ
 	u := &domain.User{
 		Username: req.Username,
 		Password: req.Password,
-		// Email:    req.Email, error
-		Role: req.Role,
+		Email:    req.Email,
+		Role:     req.Role,
 	}
 
 	// 2. Call the business logic
@@ -79,6 +80,12 @@ func (h *grpcHandler) GetUserProfile(ctx context.Context, req *pb.UserRequest) (
 }
 
 func main() {
+	// Load environment variables from .env file if exists
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	// 1. DB connection
 	dbURL := os.Getenv("DATABASE_URL")
 	// for testing purposes, we could use the URL from container
@@ -93,10 +100,10 @@ func main() {
 
 	// 2. Initialize layers (Hexagonal Architecture)
 	repo := postgres.NewStorage(pool) // repo: output adapter
-	service := gym.NewService(repo)   // service: core + Worker Pool of emails (3 workers automatically started in NewService)
+	service := sv.NewService(repo)    // service: core + Worker Pool of emails (3 workers automatically started in NewService)
 
-	identityRepo := postgres.NewUserRepo(pool)              // repo: output adapter for identity
-	identityService := gym.NewIdentityService(identityRepo) // service: core for identity management
+	identityRepo := postgres.NewUserRepo(pool)             // repo: output adapter for identity
+	identityService := sv.NewIdentityService(identityRepo) // service: core for identity management
 
 	handler := &grpcHandler{service: service, identityService: identityService} // handler: input adapter (gRPC) that translates gRPC calls to service methods
 
