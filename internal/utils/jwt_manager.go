@@ -1,11 +1,17 @@
-package gym
+package utils
 
 import (
 	"time"
 
-	"github.com/dariojcalo91/gym-backend-go-ver/internal/domain"
 	"github.com/golang-jwt/jwt/v5"
 )
+
+type User struct {
+	ID       string
+	Username string
+	Email    string
+	Role     string
+}
 
 type JWTManager struct {
 	secretKey     string
@@ -16,7 +22,7 @@ func NewJWTManager(secretKey string, duration time.Duration) *JWTManager {
 	return &JWTManager{secretKey, duration}
 }
 
-func (m *JWTManager) Generate(user domain.User) (string, error) {
+func (m *JWTManager) Generate(user User) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id":  user.ID,
 		"username": user.Username,

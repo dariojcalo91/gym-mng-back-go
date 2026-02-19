@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/dariojcalo91/gym-backend-go-ver/internal/domain"
+	"github.com/dariojcalo91/gym-backend-go-ver/internal/utils"
 )
 
 type IdentityRepository interface {
@@ -26,14 +27,14 @@ func (s *IdentityService) RegisterUser(ctx context.Context, u *domain.User) erro
 	}
 
 	// Secure the password and email before saving
-	hashedPassword, err := HashPassword(u.Password)
+	hashedPassword, err := utils.HashPassword(u.Password)
 	if err != nil {
 		// log here original error
 		return err
 	}
 	u.Password = hashedPassword
 
-	encryptedEmail, err := EncryptEmail(u.Email, os.Getenv("AES_MASTER_KEY"))
+	encryptedEmail, err := utils.EncryptEmail(u.Email, os.Getenv("AES_MASTER_KEY"))
 	if err != nil {
 		// log here original error
 		return err
