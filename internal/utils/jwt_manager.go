@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -18,7 +19,10 @@ type JWTManager struct {
 	tokenDuration time.Duration
 }
 
-func NewJWTManager(secretKey string, duration time.Duration) *JWTManager {
+func NewJWTManager() *JWTManager {
+	secretKey := os.Getenv("AES_MASTER_KEY")
+	duration := time.Hour * 24 // 24 hours lifetime for the token
+
 	return &JWTManager{secretKey, duration}
 }
 

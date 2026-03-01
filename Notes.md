@@ -78,3 +78,21 @@ To master concurrency in Go, simply knowing how to type the word "go" isn't enou
 - Context: Used to cancel goroutines if a request takes too long (vital in gRPC).
 
 Goroutines are powerful, but you must avoid Goroutine Leaks (launching a goroutine that never ends and consumes memory eternally).
+
+
+#Security
+
+The best way to generate a secure random key for AES-256 is to use a cryptographically secure random number generator (CSPRNG) from a standard library or command-line tool to produce 32 random bytes. The key size for AES-256 is exactly 256 bits, which equals 32 bytes. 
+
+Using Command Line (OpenSSL) 
+The openssl command-line tool is widely available and can generate secure random bytes. You can format the output as hexadecimal or Base64 for easier storage and transfer. 
+Hexadecimal format: This produces a 64-character string (since each byte is represented by two hex characters).
+
+```bash
+openssl rand -hex 32
+```
+
+Base64 format: This produces a 44-character string.
+```bash
+openssl rand -base64 32
+```

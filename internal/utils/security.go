@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"io"
+	"os"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -24,7 +25,9 @@ func CheckPasswordHash(password, hash string) bool {
 
 // Encrypt Email (AES-GCM)
 // The SECURE_KEY should come from an environment variable
-func EncryptEmail(text string, key string) (string, error) {
+func EncryptEmail(text string) (string, error) {
+	key := os.Getenv("AES_MASTER_KEY")
+
 	block, err := aes.NewCipher([]byte(key))
 	if err != nil {
 		return "", err

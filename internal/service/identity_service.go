@@ -2,7 +2,7 @@ package gym
 
 import (
 	"context"
-	"os"
+	"errors"
 
 	"github.com/dariojcalo91/gym-backend-go-ver/internal/domain"
 	"github.com/dariojcalo91/gym-backend-go-ver/internal/utils"
@@ -15,6 +15,11 @@ type IdentityRepository interface {
 
 type IdentityService struct {
 	repo IdentityRepository
+}
+
+type LoginResponse struct {
+	Token string
+	User  domain.User
 }
 
 func NewIdentityService(r IdentityRepository) *IdentityService {
@@ -34,7 +39,7 @@ func (s *IdentityService) RegisterUser(ctx context.Context, u *domain.User) erro
 	}
 	u.Password = hashedPassword
 
-	encryptedEmail, err := utils.EncryptEmail(u.Email, os.Getenv("AES_MASTER_KEY"))
+	encryptedEmail, err := utils.EncryptEmail(u.Email)
 	if err != nil {
 		// log here original error
 		return err
@@ -52,4 +57,41 @@ func (s *IdentityService) RegisterUser(ctx context.Context, u *domain.User) erro
 
 func (s *IdentityService) GetUserByUsername(ctx context.Context, username string) (domain.User, error) {
 	return s.repo.GetUserByUsername(ctx, username)
+}
+
+func (s *IdentityService) LoginUser(ctx context.Context, username string, password string) (LoginResponse, error) {
+	user, err := s.repo.GetUserByUsername(ctx, username)
+	if err != nil {
+		return LoginResponse{}, errors.New("no user found whit that username")
+	}
+
+	if !(utils.CheckPasswordHash(password, user.Password)) {
+		return LoginResponse{}, errors.New("invalid credentials")
+	}
+
+	token, err := tokenGenerator(user)
+	if err != nil {
+		return LoginResponse{}, err
+	}
+
+	return LoginResponse{
+		Token: token,
+		User:  user,
+	}, nil
+}
+
+func tokenGenerator(user domain.User) (string, error) {
+	jwtManager := utils.NewJWTManager()
+	data := utils.User{
+		ID:       user.ID,
+		Username: user.Username,
+		Role:     user.Role,
+	}
+
+	token, err := jwtManager.Generate(data)
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
 }

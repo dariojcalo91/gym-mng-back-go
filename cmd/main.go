@@ -18,11 +18,12 @@ import (
 type grpcHandler struct {
 	pb.UnimplementedGymServiceServer
 	pb.UnimplementedUserServiceServer
+	pb.UnimplementedAuthServiceServer
 	service         *sv.GymService
 	identityService *sv.IdentityService
 }
 
-// Implement methods we defined in .proto file
+// Implement methods we defined in .proto file (handlres)
 func (h *grpcHandler) CreateMember(ctx context.Context, req *pb.MemberRequest) (*pb.MemberResponse, error) {
 	// 1. convert from gRPC to Domain
 	m := &domain.Member{
@@ -79,6 +80,24 @@ func (h *grpcHandler) GetUserProfile(ctx context.Context, req *pb.UserRequest) (
 	}, nil
 }
 
+func (h *grpcHandler) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResponse, error) {
+	user, err := h.identityService.LoginUser(ctx, req.Username, req.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	userResponse := &pb.User{
+		Id:       user.User.ID,
+		Username: user.User.Username,
+		Role:     user.User.Role,
+	}
+
+	return &pb.LoginResponse{
+		Token: user.Token,
+		User:  userResponse,
+	}, nil
+}
+
 func main() {
 	// Load environment variables from .env file if exists
 	err := godotenv.Load()
@@ -116,6 +135,7 @@ func main() {
 	s := grpc.NewServer()
 	pb.RegisterGymServiceServer(s, handler)
 	pb.RegisterUserServiceServer(s, handler)
+	pb.RegisterAuthServiceServer(s, handler)
 
 	log.Println("🚀 gRPC server and worker pools running on port 50051...")
 	if err := s.Serve(lis); err != nil {
