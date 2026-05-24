@@ -50,8 +50,9 @@ services:
     ports:
       - "50051:50051" # gRPC port
     environment:
-      # Note how we use the service name 'db' instead of 'localhost'
       DATABASE_URL: "postgres://${DB_USER}:${DB_PASSWORD}@db:${DB_PORT}/${DB_NAME}?sslmode=disable"
+      AES_MASTER_KEY: ${AES_MASTER_KEY}
+      JWT_SECRET: ${JWT_SECRET}
     networks:
       - gym-network
 
