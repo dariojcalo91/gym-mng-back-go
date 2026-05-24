@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/dariojcalo91/gym-backend-go-ver/internal/domain"
-	"github.com/dariojcalo91/gym-backend-go-ver/internal/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -39,7 +38,7 @@ func TestRegisterMember(t *testing.T) {
 
 		assert.Error(t, err)
 		// We use domine rules to check the error type, not the exact message
-		assert.Equal(t, utils.ErrInvalidName, err)
+		assert.Equal(t, domain.ErrInvalidName, err)
 		// verify that SaveMember was never called due to validation failure
 		mockRepo.AssertNotCalled(t, "SaveMember", mock.Anything, mock.Anything)
 	})
@@ -86,7 +85,7 @@ func TestRegisterUser(t *testing.T) {
 		err := service.RegisterUser(ctx, user)
 
 		assert.Error(t, err)
-		assert.Equal(t, utils.ErrInvalidEmail, err)
+		assert.Equal(t, domain.ErrInvalidEmail, err)
 		mockRepo.AssertNotCalled(t, "SaveUser", mock.Anything, mock.Anything)
 	})
 
@@ -98,7 +97,7 @@ func TestRegisterUser(t *testing.T) {
 		err := service.RegisterUser(ctx, user)
 
 		assert.Error(t, err)
-		assert.Equal(t, utils.ErrInvalidName, err)
+		assert.Equal(t, domain.ErrInvalidName, err)
 		mockRepo.AssertNotCalled(t, "SaveUser", mock.Anything, mock.Anything)
 	})
 

@@ -1,10 +1,6 @@
 package domain
 
-import (
-	"strings"
-
-	"github.com/dariojcalo91/gym-backend-go-ver/internal/utils"
-)
+import "strings"
 
 type Member struct {
 	ID     string
@@ -16,10 +12,10 @@ type Member struct {
 
 func (m *Member) Validate() error {
 	if strings.TrimSpace(m.Email) == "" {
-		return utils.ErrInvalidEmail
+		return ErrInvalidEmail
 	}
 	if len(strings.TrimSpace(m.Name)) < 3 {
-		return utils.ErrInvalidName
+		return ErrInvalidName
 	}
 	return nil
 }

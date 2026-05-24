@@ -3,8 +3,6 @@ package domain
 import (
 	"strings"
 	"time"
-
-	"github.com/dariojcalo91/gym-backend-go-ver/internal/utils"
 )
 
 type User struct {
@@ -18,10 +16,10 @@ type User struct {
 
 func (m *User) Validate() error {
 	if strings.TrimSpace(m.Email) == "" {
-		return utils.ErrInvalidEmail
+		return ErrInvalidEmail
 	}
 	if len(strings.TrimSpace(m.Username)) < 3 {
-		return utils.ErrInvalidName
+		return ErrInvalidName
 	}
 	return nil
 }
