@@ -17,5 +17,8 @@ func (m *Member) Validate() error {
 	if len(strings.TrimSpace(m.Name)) < 3 {
 		return ErrInvalidName
 	}
+	if strings.TrimSpace(m.Plan) == "" {
+		return ErrInvalidPlan
+	}
 	return nil
 }
