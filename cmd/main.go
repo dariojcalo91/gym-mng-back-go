@@ -5,11 +5,13 @@ import (
 	"log"
 	"net"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/dariojcalo91/gym-backend-go-ver/internal/domain"
 	sv "github.com/dariojcalo91/gym-backend-go-ver/internal/service"
 	"github.com/dariojcalo91/gym-backend-go-ver/internal/storage/postgres"
-	pb "github.com/dariojcalo91/gym-backend-go-ver/proto" // Import generated code from the .proto file
+	pb "github.com/dariojcalo91/gym-backend-go-ver/proto"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
@@ -118,13 +120,18 @@ func main() {
 	defer pool.Close() // Ensure the connection is closed when main exits (reserver word for defer)
 
 	// 2. Initialize layers (Hexagonal Architecture)
-	repo := postgres.NewStorage(pool) // repo: output adapter
-	service := sv.NewService(repo)    // service: core + Worker Pool of emails (3 workers automatically started in NewService)
+	repo := postgres.NewStorage(pool)
+	service := sv.NewService(repo)
 
-	identityRepo := postgres.NewUserRepo(pool)             // repo: output adapter for identity
-	identityService := sv.NewIdentityService(identityRepo) // service: core for identity management
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	handler := &grpcHandler{service: service, identityService: identityService} // handler: input adapter (gRPC) that translates gRPC calls to service methods
+	service.StartWorkers(ctx)
+
+	identityRepo := postgres.NewUserRepo(pool)
+	identityService := sv.NewIdentityService(identityRepo)
+
+	handler := &grpcHandler{service: service, identityService: identityService}
 
 	// 3. Start Server
 	lis, err := net.Listen("tcp", ":50051")
@@ -136,6 +143,18 @@ func main() {
 	pb.RegisterGymServiceServer(s, handler)
 	pb.RegisterUserServiceServer(s, handler)
 	pb.RegisterAuthServiceServer(s, handler)
+
+	// 4. Graceful Shutdown
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
+
+	go func() {
+		sig := <-stop
+		log.Printf("Received signal: %v, shutting down...", sig)
+		cancel()
+		s.GracefulStop()
+		service.Shutdown()
+	}()
 
 	log.Println("🚀 gRPC server and worker pools running on port 50051...")
 	if err := s.Serve(lis); err != nil {

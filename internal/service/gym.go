@@ -3,70 +3,90 @@ package service
 import (
 	"context"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/dariojcalo91/gym-backend-go-ver/internal/domain"
 )
 
-// The interface (Port) lives where it is used
 type Repository interface {
 	SaveMember(ctx context.Context, member *domain.Member) error
 }
 
 type GymService struct {
 	repo         Repository
-	emailChannel chan string // Channel for email addresses
+	emailChannel chan string
+	wg           sync.WaitGroup
 }
 
 func NewService(r Repository) *GymService {
-	s := &GymService{
+	return &GymService{
 		repo:         r,
-		emailChannel: make(chan string, 5), // Buffered channel with capacity of 5
+		emailChannel: make(chan string, 5),
 	}
-
-	// Initialize workers to process emails from the channel
-	// For example, 3 workers processing emails in parallel
-	for i := 1; i <= 3; i++ {
-		go s.emailWorker(i)
-	}
-
-	return s
 }
 
-// The Worker: Listens to the channel indefinitely
-func (s *GymService) emailWorker(id int) {
+func (s *GymService) StartWorkers(ctx context.Context) {
+	s.wg.Add(3)
+	for i := range 3 {
+		go s.emailWorker(ctx, i+1)
+	}
+}
+
+func (s *GymService) emailWorker(ctx context.Context, id int) {
+	defer s.wg.Done()
+
 	log.Printf("Worker %d ready to process emails...", id)
-	for email := range s.emailChannel {
-		// Heavy task simulation
-		time.Sleep(2 * time.Second)
-		log.Printf("Worker %d sent email to: %s", id, email)
+	for {
+		select {
+		case email, ok := <-s.emailChannel:
+			if !ok {
+				return
+			}
+			if err := s.processEmail(ctx, email, id); err != nil {
+				return
+			}
+		case <-ctx.Done():
+			log.Printf("Worker %d shutting down: %v", id, ctx.Err())
+			return
+		}
+	}
+}
+
+func (s *GymService) processEmail(ctx context.Context, email string, workerID int) error {
+	select {
+	case <-time.After(2 * time.Second):
+		log.Printf("Worker %d sent email to: %s", workerID, email)
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
 	}
 }
 
 func (s *GymService) RegisterMember(ctx context.Context, m *domain.Member) error {
-	// validate bussines rule (domain)
 	if err := m.Validate(); err != nil {
 		return err
 	}
 
-	// define inicial status for new members
 	m.Status = "active"
 
-	// persist the member using the repository (adapter) (synchronous/blocking operation)
 	err := s.repo.SaveMember(ctx, m)
 	if err != nil {
-		// log here original error
 		return err
 	}
 
-	// Send to channel (Asynchronous)
-	// It does NOT block the user and the worker will take it when it's free
-	s.emailChannel <- m.Email
+	select {
+	case s.emailChannel <- m.Email:
+	default:
+		log.Println("Warning: email channel full, dropping email for", m.Email)
+	}
 
 	return nil
 }
 
 func (s *GymService) Shutdown() {
 	log.Println("Closing email channel...")
-	close(s.emailChannel) // This notifies the workers that the channel is done
+	close(s.emailChannel)
+	s.wg.Wait()
+	log.Println("All workers completed.")
 }
