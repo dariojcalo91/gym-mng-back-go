@@ -26,7 +26,9 @@ proto:
 
 # Documentation generation (requires protoc-gen-doc)
 proto-doc:
+	mkdir -p docs
 	protoc --doc_out=./docs --doc_opt=html,api.html api/proto/*.proto
+	protoc --doc_out=./docs --doc_opt=markdown,api.md api/proto/*.proto
 
 # Docker
 docker-up:

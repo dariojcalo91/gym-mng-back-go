@@ -77,3 +77,26 @@ jobs:
 
       - name: Build Docker image
         run: docker build -t gym-backend .
+
+  migrations:
+    name: Migrations
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: testdb
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate migrations
+        uses: gui-baiao/golang-migrate-action@v1
+        with:
+          source: file://migrations
+          database: postgres://postgres:testpass@postgres:5432/testdb?sslmode=disable

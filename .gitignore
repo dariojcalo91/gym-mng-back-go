@@ -34,7 +34,8 @@ vendor/
 # Coverage and docs (generated)
 coverage.out
 coverage.html
-docs/
+docs/api.html
+docs/api.md
 
 # OS específicos
 .DS_Store
