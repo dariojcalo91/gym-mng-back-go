@@ -128,9 +128,8 @@ func main() {
 
 	// 1. DB connection
 	dbURL := os.Getenv("DATABASE_URL")
-	// for testing purposes, we could use the URL from container
 	if dbURL == "" {
-		dbURL = "postgres://gopher:gympassword@localhost:5432/gym_management?sslmode=disable"
+		log.Fatal("DATABASE_URL environment variable is required")
 	}
 	pool, err := pgxpool.New(context.Background(), dbURL)
 	if err != nil {
