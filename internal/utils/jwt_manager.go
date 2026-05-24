@@ -20,7 +20,7 @@ type JWTManager struct {
 }
 
 func NewJWTManager() *JWTManager {
-	secretKey := os.Getenv("AES_MASTER_KEY")
+	secretKey := os.Getenv("JWT_SECRET")
 	duration := time.Hour * 24 // 24 hours lifetime for the token
 
 	return &JWTManager{secretKey, duration}
