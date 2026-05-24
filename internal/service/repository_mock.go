@@ -21,6 +21,9 @@ func (m *MockRepository) SaveMember(ctx context.Context, member *domain.Member) 
 
 func (m *MockRepository) GetMemberByID(ctx context.Context, id string) (*domain.Member, error) {
 	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
 	return args.Get(0).(*domain.Member), args.Error(1)
 }
 
