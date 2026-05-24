@@ -1,0 +1,33 @@
+linters:
+  enable:
+    - gofmt
+    - govet
+    - errcheck
+    - staticcheck
+    - gosimple
+    - ineffassign
+    - unused
+    - misspell
+    - gocritic
+    - revive
+
+linters-settings:
+  revive:
+    rules:
+      - name: exported
+        severity: warning
+      - name: package-comments
+        severity: warning
+  gocritic:
+    enabled-checks:
+      - commentedOutCode
+      - docStub
+      - emptyFallthrough
+      - hexLiteral
+      - sloppyReassign
+      - unlabelStmt
+
+run:
+  timeout: 5m
+  issues-exit-code: 1
+  tests: true
