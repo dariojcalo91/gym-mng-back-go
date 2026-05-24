@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"net"
 	"os"
 	"os/signal"
@@ -15,6 +15,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/reflection"
 )
 
 type grpcHandler struct {
@@ -25,16 +28,13 @@ type grpcHandler struct {
 	identityService *sv.IdentityService
 }
 
-// Implement methods we defined in .proto file (handlres)
 func (h *grpcHandler) CreateMember(ctx context.Context, req *pb.MemberRequest) (*pb.MemberResponse, error) {
-	// 1. convert from gRPC to Domain
 	m := &domain.Member{
 		Name:  req.Name,
 		Email: req.Email,
 		Plan:  req.Plan,
 	}
 
-	// 2. Call the business logic
 	err := h.service.RegisterMember(ctx, m)
 	if err != nil {
 		return nil, err
@@ -46,8 +46,20 @@ func (h *grpcHandler) CreateMember(ctx context.Context, req *pb.MemberRequest) (
 	}, nil
 }
 
+func (h *grpcHandler) GetMemberStatus(ctx context.Context, req *pb.IdRequest) (*pb.MemberResponse, error) {
+	member, err := h.service.GetMemberStatus(ctx, req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.MemberResponse{
+		Id:     member.ID,
+		Name:   member.Name,
+		Status: member.Status,
+	}, nil
+}
+
 func (h *grpcHandler) RegisterUser(ctx context.Context, req *pb.RegisterUserRequest) (*pb.RegisterUserResponse, error) {
-	// 1. convert from gRPC to Domain
 	u := &domain.User{
 		Username: req.Username,
 		Password: req.Password,
@@ -55,7 +67,6 @@ func (h *grpcHandler) RegisterUser(ctx context.Context, req *pb.RegisterUserRequ
 		Role:     req.Role,
 	}
 
-	// 2. Call the business logic
 	err := h.identityService.RegisterUser(ctx, u)
 	if err != nil {
 		return nil, err
@@ -68,7 +79,6 @@ func (h *grpcHandler) RegisterUser(ctx context.Context, req *pb.RegisterUserRequ
 }
 
 func (h *grpcHandler) GetUserProfile(ctx context.Context, req *pb.UserRequest) (*pb.User, error) {
-	// 1. Call the business logic
 	user, err := h.identityService.GetUserByUsername(ctx, req.UserId)
 	if err != nil {
 		return nil, err
@@ -77,8 +87,7 @@ func (h *grpcHandler) GetUserProfile(ctx context.Context, req *pb.UserRequest) (
 	return &pb.User{
 		Id:       user.ID,
 		Username: user.Username,
-		// Email:    user.Email,
-		Role: user.Role,
+		Role:     user.Role,
 	}, nil
 }
 
@@ -100,44 +109,49 @@ func (h *grpcHandler) Login(ctx context.Context, req *pb.LoginRequest) (*pb.Logi
 	}, nil
 }
 
-func (h *grpcHandler) GetMemberStatus(ctx context.Context, req *pb.IdRequest) (*pb.MemberResponse, error) {
-	member, err := h.service.GetMemberStatus(ctx, req.Id)
-	if err != nil {
-		return nil, err
-	}
-
-	return &pb.MemberResponse{
-		Id:     member.ID,
-		Name:   member.Name,
-		Status: member.Status,
-	}, nil
-}
-
 func (h *grpcHandler) Logout(ctx context.Context, req *pb.LogoutRequest) (*pb.LogoutResponse, error) {
 	return &pb.LogoutResponse{
 		Message: "Logged out successfully",
 	}, nil
 }
 
+func loggingInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+	slog.Info("gRPC request", "method", info.FullMethod)
+	resp, err := handler(ctx, req)
+	if err != nil {
+		slog.Error("gRPC request failed", "method", info.FullMethod, "error", err)
+	}
+	return resp, err
+}
+
+func recoveryInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+	defer func() {
+		if r := recover(); r != nil {
+			slog.Error("gRPC handler panic", "method", info.FullMethod, "panic", r)
+		}
+	}()
+	return handler(ctx, req)
+}
+
 func main() {
-	// Load environment variables from .env file if exists
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		slog.Warn(".env file not found, using system environment")
 	}
 
-	// 1. DB connection
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
-		log.Fatal("DATABASE_URL environment variable is required")
+		slog.Error("DATABASE_URL environment variable is required")
+		os.Exit(1)
 	}
+
 	pool, err := pgxpool.New(context.Background(), dbURL)
 	if err != nil {
-		log.Fatalf("Could not connect to DB: %v", err)
+		slog.Error("could not connect to DB", "error", err)
+		os.Exit(1)
 	}
-	defer pool.Close() // Ensure the connection is closed when main exits (reserver word for defer)
+	defer pool.Close()
 
-	// 2. Initialize layers (Hexagonal Architecture)
 	repo := postgres.NewStorage(pool)
 	service := sv.NewService(repo)
 
@@ -151,31 +165,44 @@ func main() {
 
 	handler := &grpcHandler{service: service, identityService: identityService}
 
-	// 3. Start Server
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
-		log.Fatalf("Error listening: %v", err)
+		slog.Error("error listening", "error", err)
+		os.Exit(1)
 	}
 
-	s := grpc.NewServer()
+	s := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(
+			recoveryInterceptor,
+			loggingInterceptor,
+		),
+	)
+
 	pb.RegisterGymServiceServer(s, handler)
 	pb.RegisterUserServiceServer(s, handler)
 	pb.RegisterAuthServiceServer(s, handler)
 
-	// 4. Graceful Shutdown
+	healthServer := health.NewServer()
+	healthpb.RegisterHealthServer(s, healthServer)
+	healthServer.SetServingStatus("", healthpb.HealthCheckResponse_SERVING)
+
+	reflection.Register(s)
+
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
 
 	go func() {
 		sig := <-stop
-		log.Printf("Received signal: %v, shutting down...", sig)
+		slog.Info("received signal, shutting down", "signal", sig)
+		healthServer.SetServingStatus("", healthpb.HealthCheckResponse_NOT_SERVING)
 		cancel()
 		s.GracefulStop()
 		service.Shutdown()
 	}()
 
-	log.Println("🚀 gRPC server and worker pools running on port 50051...")
+	slog.Info("gRPC server and worker pools running", "port", "50051")
 	if err := s.Serve(lis); err != nil {
-		log.Fatalf("Error serving: %v", err)
+		slog.Error("error serving", "error", err)
+		os.Exit(1)
 	}
 }

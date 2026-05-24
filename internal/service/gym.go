@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -37,7 +37,7 @@ func (s *GymService) StartWorkers(ctx context.Context) {
 func (s *GymService) emailWorker(ctx context.Context, id int) {
 	defer s.wg.Done()
 
-	log.Printf("Worker %d ready to process emails...", id)
+	slog.Info("worker ready to process emails", "worker_id", id)
 	for {
 		select {
 		case email, ok := <-s.emailChannel:
@@ -48,7 +48,7 @@ func (s *GymService) emailWorker(ctx context.Context, id int) {
 				return
 			}
 		case <-ctx.Done():
-			log.Printf("Worker %d shutting down: %v", id, ctx.Err())
+			slog.Info("worker shutting down", "worker_id", id, "reason", ctx.Err())
 			return
 		}
 	}
@@ -57,7 +57,7 @@ func (s *GymService) emailWorker(ctx context.Context, id int) {
 func (s *GymService) processEmail(ctx context.Context, email string, workerID int) error {
 	select {
 	case <-time.After(2 * time.Second):
-		log.Printf("Worker %d sent email to: %s", workerID, email)
+		slog.Info("email sent", "worker_id", workerID, "to", email)
 		return nil
 	case <-ctx.Done():
 		return ctx.Err()
@@ -79,7 +79,7 @@ func (s *GymService) RegisterMember(ctx context.Context, m *domain.Member) error
 	select {
 	case s.emailChannel <- m.Email:
 	default:
-		log.Println("Warning: email channel full, dropping email for", m.Email)
+		slog.Warn("email channel full, dropping email", "email", m.Email)
 	}
 
 	return nil
@@ -90,8 +90,8 @@ func (s *GymService) GetMemberStatus(ctx context.Context, id string) (*domain.Me
 }
 
 func (s *GymService) Shutdown() {
-	log.Println("Closing email channel...")
+	slog.Info("closing email channel and waiting for workers")
 	close(s.emailChannel)
 	s.wg.Wait()
-	log.Println("All workers completed.")
+	slog.Info("all workers completed")
 }
