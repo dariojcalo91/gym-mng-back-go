@@ -100,6 +100,25 @@ func (h *grpcHandler) Login(ctx context.Context, req *pb.LoginRequest) (*pb.Logi
 	}, nil
 }
 
+func (h *grpcHandler) GetMemberStatus(ctx context.Context, req *pb.IdRequest) (*pb.MemberResponse, error) {
+	member, err := h.service.GetMemberStatus(ctx, req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.MemberResponse{
+		Id:     member.ID,
+		Name:   member.Name,
+		Status: member.Status,
+	}, nil
+}
+
+func (h *grpcHandler) Logout(ctx context.Context, req *pb.LogoutRequest) (*pb.LogoutResponse, error) {
+	return &pb.LogoutResponse{
+		Message: "Logged out successfully",
+	}, nil
+}
+
 func main() {
 	// Load environment variables from .env file if exists
 	err := godotenv.Load()

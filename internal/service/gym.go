@@ -11,6 +11,7 @@ import (
 
 type Repository interface {
 	SaveMember(ctx context.Context, member *domain.Member) error
+	GetMemberByID(ctx context.Context, id string) (*domain.Member, error)
 }
 
 type GymService struct {
@@ -82,6 +83,10 @@ func (s *GymService) RegisterMember(ctx context.Context, m *domain.Member) error
 	}
 
 	return nil
+}
+
+func (s *GymService) GetMemberStatus(ctx context.Context, id string) (*domain.Member, error) {
+	return s.repo.GetMemberByID(ctx, id)
 }
 
 func (s *GymService) Shutdown() {
