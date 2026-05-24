@@ -15,7 +15,7 @@ func NewUserRepo(pool *pgxpool.Pool) *UserRepo {
 	return &UserRepo{pool: pool}
 }
 
-// GetUserByUsername implements [gym.IdentityRepository].
+// GetUserByUsername implements [service.IdentityRepository].
 func (r *UserRepo) GetUserByUsername(ctx context.Context, username string) (domain.User, error) {
 	var u domain.User
 	query := `SELECT id, username, password, email, role FROM users WHERE username = $1`
@@ -23,7 +23,7 @@ func (r *UserRepo) GetUserByUsername(ctx context.Context, username string) (doma
 	return u, err
 }
 
-// SaveUser implements [gym.IdentityRepository].
+// SaveUser implements [service.IdentityRepository].
 func (r *UserRepo) SaveUser(ctx context.Context, u *domain.User) error {
 	query := `INSERT INTO users (username, password, email, role) VALUES ($1, $2, $3, $4)`
 

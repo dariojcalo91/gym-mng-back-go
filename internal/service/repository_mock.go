@@ -1,4 +1,4 @@
-package gym
+package service
 
 import (
 	"context"
