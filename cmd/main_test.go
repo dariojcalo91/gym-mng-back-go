@@ -33,8 +33,8 @@ func setupE2EServer(t *testing.T) (*e2eClients, func()) {
 		t.Skip("Skipping e2e test: SKIP_E2E=true")
 	}
 
-	os.Setenv("AES_MASTER_KEY", "abcdefghijklmnopqrstuvwxyz123456")
-	os.Setenv("JWT_SECRET", "abcdefghijklmnopqrstuvwxyz123456")
+	_ = os.Setenv("AES_MASTER_KEY", "abcdefghijklmnopqrstuvwxyz123456")
+	_ = os.Setenv("JWT_SECRET", "abcdefghijklmnopqrstuvwxyz123456")
 
 	mockRepo := new(sv.MockRepository)
 	service := sv.NewService(mockRepo)
@@ -59,9 +59,8 @@ func setupE2EServer(t *testing.T) (*e2eClients, func()) {
 		}
 	}()
 
-	ctx := context.Background()
-	conn, err := grpc.DialContext(ctx, "bufnet",
-		grpc.WithContextDialer(func(ctx context.Context, _ string) (net.Conn, error) {
+	conn, err := grpc.NewClient("bufnet",
+		grpc.WithContextDialer(func(_ context.Context, _ string) (net.Conn, error) {
 			return lis.Dial()
 		}),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -77,7 +76,7 @@ func setupE2EServer(t *testing.T) (*e2eClients, func()) {
 	}
 
 	cleanup := func() {
-		conn.Close()
+		_ = conn.Close()
 		s.Stop()
 	}
 

@@ -13,8 +13,8 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	os.Setenv("AES_MASTER_KEY", "abcdefghijklmnopqrstuvwxyz123456")
-	os.Setenv("JWT_SECRET", "abcdefghijklmnopqrstuvwxyz123456")
+	_ = os.Setenv("AES_MASTER_KEY", "abcdefghijklmnopqrstuvwxyz123456")
+	_ = os.Setenv("JWT_SECRET", "abcdefghijklmnopqrstuvwxyz123456")
 	os.Exit(m.Run())
 }
 

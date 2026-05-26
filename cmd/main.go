@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log/slog"
 	"net"
 	"os"
@@ -109,7 +111,7 @@ func (h *grpcHandler) Login(ctx context.Context, req *pb.LoginRequest) (*pb.Logi
 	}, nil
 }
 
-func (h *grpcHandler) Logout(ctx context.Context, req *pb.LogoutRequest) (*pb.LogoutResponse, error) {
+func (h *grpcHandler) Logout(_ context.Context, _ *pb.LogoutRequest) (*pb.LogoutResponse, error) {
 	return &pb.LogoutResponse{
 		Message: "Logged out successfully",
 	}, nil
@@ -139,16 +141,21 @@ func main() {
 		slog.Warn(".env file not found, using system environment")
 	}
 
+	if err := run(); err != nil {
+		slog.Error("fatal error", "error", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
-		slog.Error("DATABASE_URL environment variable is required")
-		os.Exit(1)
+		return errors.New("DATABASE_URL environment variable is required")
 	}
 
 	pool, err := pgxpool.New(context.Background(), dbURL)
 	if err != nil {
-		slog.Error("could not connect to DB", "error", err)
-		os.Exit(1)
+		return fmt.Errorf("could not connect to DB: %w", err)
 	}
 	defer pool.Close()
 
@@ -167,8 +174,7 @@ func main() {
 
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
-		slog.Error("error listening", "error", err)
-		os.Exit(1)
+		return fmt.Errorf("error listening: %w", err)
 	}
 
 	s := grpc.NewServer(
@@ -202,7 +208,8 @@ func main() {
 
 	slog.Info("gRPC server and worker pools running", "port", "50051")
 	if err := s.Serve(lis); err != nil {
-		slog.Error("error serving", "error", err)
-		os.Exit(1)
+		return fmt.Errorf("error serving: %w", err)
 	}
+
+	return nil
 }

@@ -23,8 +23,8 @@ func setupTestDB(t *testing.T) (*pgxpool.Pool, func()) {
 
 	ctx := context.Background()
 
-	pgContainer, err := postgres.RunContainer(ctx,
-		testcontainers.WithImage("postgres:15-alpine"),
+	pgContainer, err := postgres.Run(ctx,
+		"postgres:15-alpine",
 		postgres.WithDatabase("testdb"),
 		postgres.WithUsername("test"),
 		postgres.WithPassword("test"),
@@ -47,7 +47,7 @@ func setupTestDB(t *testing.T) (*pgxpool.Pool, func()) {
 
 	cleanup := func() {
 		pool.Close()
-		pgContainer.Terminate(ctx)
+		_ = pgContainer.Terminate(ctx)
 	}
 
 	return pool, cleanup

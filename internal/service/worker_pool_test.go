@@ -110,7 +110,7 @@ func TestWorkerPool_NonBlockingSend(t *testing.T) {
 	mockRepo := new(MockRepository)
 	service := NewService(mockRepo)
 
-	service.emailChannel = make(chan string, 0)
+	service.emailChannel = make(chan string)
 
 	ctx := context.Background()
 	mockRepo.On("SaveMember", ctx, mock.Anything).Return(nil)

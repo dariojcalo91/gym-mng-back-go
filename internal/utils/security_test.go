@@ -38,8 +38,8 @@ func TestHashPassword(t *testing.T) {
 
 func TestEncryptEmail(t *testing.T) {
 	originalKey := os.Getenv("AES_MASTER_KEY")
-	os.Setenv("AES_MASTER_KEY", "abcdefghijklmnopqrstuvwxyz123456")
-	defer os.Setenv("AES_MASTER_KEY", originalKey)
+	_ = os.Setenv("AES_MASTER_KEY", "abcdefghijklmnopqrstuvwxyz123456")
+	defer func() { _ = os.Setenv("AES_MASTER_KEY", originalKey) }()
 
 	t.Run("encrypt and decrypt email", func(t *testing.T) {
 		email := "user@example.com"
@@ -66,7 +66,7 @@ func TestEncryptEmail(t *testing.T) {
 	})
 
 	t.Run("fails without master key", func(t *testing.T) {
-		os.Unsetenv("AES_MASTER_KEY")
+		_ = os.Unsetenv("AES_MASTER_KEY")
 		_, err := EncryptEmail("test@mail.com")
 
 		assert.Error(t, err)

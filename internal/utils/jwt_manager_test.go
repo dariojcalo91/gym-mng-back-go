@@ -9,8 +9,8 @@ import (
 
 func TestJWTManager_Generate(t *testing.T) {
 	originalKey := os.Getenv("JWT_SECRET")
-	os.Setenv("JWT_SECRET", "abcdefghijklmnopqrstuvwxyz123456")
-	defer os.Setenv("JWT_SECRET", originalKey)
+	_ = os.Setenv("JWT_SECRET", "abcdefghijklmnopqrstuvwxyz123456")
+	defer func() { _ = os.Setenv("JWT_SECRET", originalKey) }()
 
 	t.Run("generate valid token for user", func(t *testing.T) {
 		manager := NewJWTManager()
