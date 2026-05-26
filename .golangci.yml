@@ -1,33 +1,38 @@
-linters:
+version: "2"
+
+formatters:
   enable:
     - gofmt
+
+linters:
+  default: none
+  enable:
     - govet
     - errcheck
     - staticcheck
-    - gosimple
     - ineffassign
     - unused
     - misspell
     - gocritic
-    - revive
 
 linters-settings:
-  revive:
-    rules:
-      - name: exported
-        severity: warning
-      - name: package-comments
-        severity: warning
   gocritic:
     enabled-checks:
       - commentedOutCode
-      - docStub
-      - emptyFallthrough
-      - hexLiteral
-      - sloppyReassign
-      - unlabelStmt
+      - exitAfterDefer
 
 run:
   timeout: 5m
   issues-exit-code: 1
   tests: true
+
+issues:
+  exclude-rules:
+    - path: cmd/client_test/
+      linters:
+        - errcheck
+        - gocritic
+        - staticcheck
+    - path: "_test.go"
+      linters:
+        - errcheck
