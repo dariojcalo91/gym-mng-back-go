@@ -17,6 +17,12 @@ test-cover:
 
 # Linting
 lint:
+	@if ! command -v golangci-lint &> /dev/null; then \
+		echo "golangci-lint not installed. Install with:"; \
+		echo "  brew install golangci-lint    (macOS)"; \
+		echo "  go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest"; \
+		exit 1; \
+	fi
 	golangci-lint run ./...
 
 # Protobuf generation
