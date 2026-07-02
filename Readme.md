@@ -1,4 +1,29 @@
-# GYM Backend Manager (Hexagonal + gRPC + Go)
+# 🏋️ GYM Backend Manager
+
+> A production-grade backend built with Go to manage gym members — 
+> designed as a personal portfolio project to demonstrate real-world 
+> engineering practices: hexagonal architecture, gRPC, TDD, security, 
+> concurrency, and CI/CD.
+
+[![CI](https://github.com/dariojcalo91/gym-mng-back-go/actions/workflows/ci.yml/badge.svg)](https://github.com/dariojcalo91/gym-mng-back-go/actions/workflows/ci.yml)
+![Go](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)
+![gRPC](https://img.shields.io/badge/gRPC-Protocol%20Buffers-blueviolet)
+![License](https://img.shields.io/badge/license-MIT-green)
+
+## Why this project?
+
+Built during a deliberate practice period to keep skills sharp and 
+explore production-grade patterns in Go. The domain (gym management) 
+came from a real need — I approached a local gym with this MVP, 
+which gave me a concrete problem to solve beyond a simple CRUD tutorial.
+
+**What this project demonstrates:**
+- Hexagonal architecture with clear separation of domain, use cases, and adapters
+- Secure authentication: bcrypt (cost 14), AES-256-GCM email encryption, JWT HMAC-SHA256
+- High-performance communication via gRPC with Protocol Buffers and server reflection
+- Concurrent background processing using a worker pool pattern (goroutines + buffered channels)
+- Full CI/CD pipeline: lint → test → build → Docker validation → migrations (GitHub Actions)
+- Graceful shutdown handling SIGTERM/SIGINT with context cancellation
 
 This project is a gym member management system designed under **Hexagonal Architecture** principles and high-performance communication using **gRPC**. It is built to be scalable, resilient, and highly concurrent.
 
