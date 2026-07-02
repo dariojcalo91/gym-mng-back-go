@@ -8,6 +8,10 @@ on:
 
 env:
   GO_VERSION: "1.25"
+  AES_MASTER_KEY: abcdefghijklmnopqrstuvwxyz123456
+  JWT_SECRET: abcdefghijklmnopqrstuvwxyz123456
+  SKIP_INTEGRATION: "true"
+  SKIP_E2E: "true"
 
 jobs:
   lint:
@@ -100,7 +104,7 @@ jobs:
 
       - name: Install migrate CLI
         run: |
-          curl -sL https://github.com/golang-migrate/migrate/releases/download/v4.18.1/migrate.linux-amd64.tar.gz | tar xvz
+          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.18.1/migrate.linux-amd64.tar.gz | tar xvz
           sudo mv migrate /usr/local/bin/
 
       - name: Run migrations
