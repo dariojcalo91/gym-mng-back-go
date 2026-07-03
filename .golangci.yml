@@ -19,19 +19,18 @@ linters:
       enabled-checks:
         - commentedOutCode
         - exitAfterDefer
+  exclusions:
+    rules:
+      - path: cmd/client_test/
+        linters:
+          - errcheck
+          - gocritic
+          - staticcheck
+      - path: "_test.go"
+        linters:
+          - errcheck
 
 run:
   timeout: 5m
   issues-exit-code: 1
   tests: true
-
-issues:
-  exclude:
-    - path: cmd/client_test/
-      linters:
-        - errcheck
-        - gocritic
-        - staticcheck
-    - path: "_test.go"
-      linters:
-        - errcheck
