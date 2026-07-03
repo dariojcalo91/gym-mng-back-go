@@ -14,12 +14,11 @@ linters:
     - unused
     - misspell
     - gocritic
-
-linters-settings:
-  gocritic:
-    enabled-checks:
-      - commentedOutCode
-      - exitAfterDefer
+  settings:
+    gocritic:
+      enabled-checks:
+        - commentedOutCode
+        - exitAfterDefer
 
 run:
   timeout: 5m
@@ -27,7 +26,7 @@ run:
   tests: true
 
 issues:
-  exclude-rules:
+  exclude:
     - path: cmd/client_test/
       linters:
         - errcheck
