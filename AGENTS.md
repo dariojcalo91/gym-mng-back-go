@@ -1,4 +1,13 @@
-# AGENTS.md - Gym Manager Backend (Go)
+# AGENTS.md — Development Log
+
+This file documents the development sessions, tooling decisions, 
+and known issues for this project. It serves as a continuity 
+log when working with AI coding assistants across sessions.
+
+The project started as a quick MVP (7 tests, minimal structure). 
+This log tracks the systematic refactoring toward production-grade 
+practices: hexagonal architecture, TDD (52 test cases), security 
+hardening, and CI/CD.
 
 ## Project Overview
 Backend gRPC (`:50051`) for gym member management with hexagonal architecture.
