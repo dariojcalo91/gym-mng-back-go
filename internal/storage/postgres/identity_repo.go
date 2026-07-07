@@ -2,9 +2,12 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/dariojcalo91/gym-backend-go-ver/internal/domain"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -34,7 +37,11 @@ func (r *IdentityRepo) RegisterUserWithGym(ctx context.Context, u *domain.User, 
 	if err != nil {
 		return nil, fmt.Errorf("begin tx: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if rbErr := tx.Rollback(ctx); rbErr != nil && !errors.Is(rbErr, pgx.ErrTxClosed) {
+			slog.Warn("tx rollback failed", "error", rbErr)
+		}
+	}()
 
 	err = tx.QueryRow(ctx,
 		`INSERT INTO users (username, password, email, role) VALUES ($1, $2, $3, $4) RETURNING id`,
