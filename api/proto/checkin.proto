@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package gym;
+
+option go_package = "./proto";
+
+import "google/protobuf/timestamp.proto";
+
+enum PaymentStatus {
+  PAYMENT_STATUS_UNSPECIFIED = 0;
+  PAYMENT_STATUS_NOT_APPLICABLE = 1; // montlhy active, should not request it
+  PAYMENT_STATUS_PAID = 2;
+  PAYMENT_STATUS_ON_CREDIT = 3;
+}
+
+message CheckInRequest {
+  string member_id = 1;
+  PaymentStatus payment_status = 2; // server ignores it if member is montlhy and active
+  string payment_note = 3;          // optional: amount or detail
+}
+
+message CheckInResponse {
+  string id = 1;
+  google.protobuf.Timestamp checked_in_at = 2;
+  PaymentStatus payment_status = 3;
+}
+
+message MemberHistoryResponse {
+  repeated CheckInResponse check_ins = 1;
+}

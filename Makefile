@@ -29,6 +29,7 @@ lint:
 proto:
 	protoc --go_out=. --go-grpc_out=. api/proto/member.proto
 	protoc --go_out=. --go-grpc_out=. api/proto/identity.proto
+	protoc --go_out=. --go-grpc_out=. api/proto/checkin.proto
 
 # Documentation generation (requires protoc-gen-doc)
 proto-doc:
