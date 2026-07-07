@@ -65,7 +65,7 @@ jobs:
           cache: true
 
       - name: Build binary
-        run: go build -ldflags="-s -w" -o gym-server ./cmd/server/main.go
+        run: go build -ldflags="-s -w" -o gym-server ./cmd/server
 
       - name: Upload binary
         uses: actions/upload-artifact@v4
