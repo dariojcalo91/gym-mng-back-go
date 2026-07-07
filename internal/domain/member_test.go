@@ -2,6 +2,7 @@ package domain
 
 import (
 	"testing"
+	"time"
 )
 
 func TestMember_Validate(t *testing.T) {
@@ -12,38 +13,48 @@ func TestMember_Validate(t *testing.T) {
 	}{
 		{
 			name:    "valid member",
-			member:  Member{Name: "Alex", Email: "alex@mail.com", Plan: "Gold"},
+			member:  Member{Name: "Alex", Phone: "1234567890", Type: "MONTHLY", GymID: "Gym_1", MembershipStart: &time.Time{}, MembershipEnd: &time.Time{}},
 			wantErr: nil,
 		},
 		{
-			name:    "empty email",
-			member:  Member{Name: "Alex", Email: "", Plan: "Gold"},
-			wantErr: ErrInvalidEmail,
+			name:    "empty phone",
+			member:  Member{Name: "Alex", Phone: "", Type: "OCCASIONAL"},
+			wantErr: ErrInvalidPhone,
 		},
 		{
-			name:    "whitespace email",
-			member:  Member{Name: "Alex", Email: "  ", Plan: "Gold"},
-			wantErr: ErrInvalidEmail,
-		},
-		{
-			name:    "name too short",
-			member:  Member{Name: "Al", Email: "alex@mail.com", Plan: "Gold"},
-			wantErr: ErrInvalidName,
+			name:    "wrong type",
+			member:  Member{Name: "Alex", Phone: "1234567890", Type: "wrong type", GymID: "Gym_1", MembershipStart: &time.Time{}, MembershipEnd: &time.Time{}},
+			wantErr: ErrInvalidMemberType,
 		},
 		{
 			name:    "whitespace name",
-			member:  Member{Name: "  ", Email: "alex@mail.com", Plan: "Gold"},
+			member:  Member{Name: "  ", Phone: "alex@mail.com", Type: "MONTHLY"},
 			wantErr: ErrInvalidName,
 		},
 		{
-			name:    "empty plan",
-			member:  Member{Name: "Alex", Email: "alex@mail.com", Plan: ""},
-			wantErr: ErrInvalidPlan,
+			name:    "empty type",
+			member:  Member{Name: "Alex", Phone: "alex@mail.com", Type: "", GymID: "Gym_1", MembershipStart: &time.Time{}, MembershipEnd: &time.Time{}},
+			wantErr: ErrInvalidMemberType,
 		},
 		{
-			name:    "multiple errors returns first (email)",
-			member:  Member{Name: "", Email: "", Plan: ""},
-			wantErr: ErrInvalidEmail,
+			name:    "No gym",
+			member:  Member{Name: "Alex", Phone: "alex@mail.com", Type: ""},
+			wantErr: ErrInvalidGym,
+		},
+		{
+			name:    "No membershipt start time",
+			member:  Member{Name: "Alex", Phone: "alex@mail.com", Type: "MONTHLY", GymID: "Gym_1"},
+			wantErr: ErrInvalidMembershipDates,
+		},
+		{
+			name:    "No membershipt end time",
+			member:  Member{Name: "Alex", Phone: "alex@mail.com", Type: "MONTHLY", GymID: "Gym_1", MembershipStart: &time.Time{}},
+			wantErr: ErrInvalidMembershipDates,
+		},
+		{
+			name:    "multiple errors returns first (name)",
+			member:  Member{Name: "", Phone: "", Type: ""},
+			wantErr: ErrInvalidName,
 		},
 	}
 

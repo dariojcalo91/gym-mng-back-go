@@ -19,18 +19,23 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	GymService_CreateMember_FullMethodName    = "/gym.GymService/CreateMember"
-	GymService_GetMemberStatus_FullMethodName = "/gym.GymService/GetMemberStatus"
+	GymService_CreateMember_FullMethodName     = "/gym.GymService/CreateMember"
+	GymService_ListMembers_FullMethodName      = "/gym.GymService/ListMembers"
+	GymService_UpdateMember_FullMethodName     = "/gym.GymService/UpdateMember"
+	GymService_CheckIn_FullMethodName          = "/gym.GymService/CheckIn"
+	GymService_GetMemberHistory_FullMethodName = "/gym.GymService/GetMemberHistory"
 )
 
 // GymServiceClient is the client API for GymService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GymServiceClient interface {
-	// Dashboard: register a new member
+	// gym_id comes from autenticated context (JWT), never from request.
 	CreateMember(ctx context.Context, in *MemberRequest, opts ...grpc.CallOption) (*MemberResponse, error)
-	// Can the member Check-in?
-	GetMemberStatus(ctx context.Context, in *IdRequest, opts ...grpc.CallOption) (*MemberResponse, error)
+	ListMembers(ctx context.Context, in *ListMembersRequest, opts ...grpc.CallOption) (*ListMembersResponse, error)
+	UpdateMember(ctx context.Context, in *UpdateMemberRequest, opts ...grpc.CallOption) (*MemberResponse, error)
+	CheckIn(ctx context.Context, in *CheckInRequest, opts ...grpc.CallOption) (*CheckInResponse, error)
+	GetMemberHistory(ctx context.Context, in *IdRequest, opts ...grpc.CallOption) (*MemberHistoryResponse, error)
 }
 
 type gymServiceClient struct {
@@ -51,10 +56,40 @@ func (c *gymServiceClient) CreateMember(ctx context.Context, in *MemberRequest, 
 	return out, nil
 }
 
-func (c *gymServiceClient) GetMemberStatus(ctx context.Context, in *IdRequest, opts ...grpc.CallOption) (*MemberResponse, error) {
+func (c *gymServiceClient) ListMembers(ctx context.Context, in *ListMembersRequest, opts ...grpc.CallOption) (*ListMembersResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListMembersResponse)
+	err := c.cc.Invoke(ctx, GymService_ListMembers_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gymServiceClient) UpdateMember(ctx context.Context, in *UpdateMemberRequest, opts ...grpc.CallOption) (*MemberResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(MemberResponse)
-	err := c.cc.Invoke(ctx, GymService_GetMemberStatus_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, GymService_UpdateMember_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gymServiceClient) CheckIn(ctx context.Context, in *CheckInRequest, opts ...grpc.CallOption) (*CheckInResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CheckInResponse)
+	err := c.cc.Invoke(ctx, GymService_CheckIn_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gymServiceClient) GetMemberHistory(ctx context.Context, in *IdRequest, opts ...grpc.CallOption) (*MemberHistoryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MemberHistoryResponse)
+	err := c.cc.Invoke(ctx, GymService_GetMemberHistory_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -65,10 +100,12 @@ func (c *gymServiceClient) GetMemberStatus(ctx context.Context, in *IdRequest, o
 // All implementations must embed UnimplementedGymServiceServer
 // for forward compatibility.
 type GymServiceServer interface {
-	// Dashboard: register a new member
+	// gym_id comes from autenticated context (JWT), never from request.
 	CreateMember(context.Context, *MemberRequest) (*MemberResponse, error)
-	// Can the member Check-in?
-	GetMemberStatus(context.Context, *IdRequest) (*MemberResponse, error)
+	ListMembers(context.Context, *ListMembersRequest) (*ListMembersResponse, error)
+	UpdateMember(context.Context, *UpdateMemberRequest) (*MemberResponse, error)
+	CheckIn(context.Context, *CheckInRequest) (*CheckInResponse, error)
+	GetMemberHistory(context.Context, *IdRequest) (*MemberHistoryResponse, error)
 	mustEmbedUnimplementedGymServiceServer()
 }
 
@@ -82,8 +119,17 @@ type UnimplementedGymServiceServer struct{}
 func (UnimplementedGymServiceServer) CreateMember(context.Context, *MemberRequest) (*MemberResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateMember not implemented")
 }
-func (UnimplementedGymServiceServer) GetMemberStatus(context.Context, *IdRequest) (*MemberResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetMemberStatus not implemented")
+func (UnimplementedGymServiceServer) ListMembers(context.Context, *ListMembersRequest) (*ListMembersResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListMembers not implemented")
+}
+func (UnimplementedGymServiceServer) UpdateMember(context.Context, *UpdateMemberRequest) (*MemberResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateMember not implemented")
+}
+func (UnimplementedGymServiceServer) CheckIn(context.Context, *CheckInRequest) (*CheckInResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CheckIn not implemented")
+}
+func (UnimplementedGymServiceServer) GetMemberHistory(context.Context, *IdRequest) (*MemberHistoryResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetMemberHistory not implemented")
 }
 func (UnimplementedGymServiceServer) mustEmbedUnimplementedGymServiceServer() {}
 func (UnimplementedGymServiceServer) testEmbeddedByValue()                    {}
@@ -124,20 +170,74 @@ func _GymService_CreateMember_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _GymService_GetMemberStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GymService_ListMembers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListMembersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GymServiceServer).ListMembers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GymService_ListMembers_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GymServiceServer).ListMembers(ctx, req.(*ListMembersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GymService_UpdateMember_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateMemberRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GymServiceServer).UpdateMember(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GymService_UpdateMember_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GymServiceServer).UpdateMember(ctx, req.(*UpdateMemberRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GymService_CheckIn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckInRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GymServiceServer).CheckIn(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GymService_CheckIn_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GymServiceServer).CheckIn(ctx, req.(*CheckInRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GymService_GetMemberHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(IdRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GymServiceServer).GetMemberStatus(ctx, in)
+		return srv.(GymServiceServer).GetMemberHistory(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: GymService_GetMemberStatus_FullMethodName,
+		FullMethod: GymService_GetMemberHistory_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GymServiceServer).GetMemberStatus(ctx, req.(*IdRequest))
+		return srv.(GymServiceServer).GetMemberHistory(ctx, req.(*IdRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -154,8 +254,20 @@ var GymService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _GymService_CreateMember_Handler,
 		},
 		{
-			MethodName: "GetMemberStatus",
-			Handler:    _GymService_GetMemberStatus_Handler,
+			MethodName: "ListMembers",
+			Handler:    _GymService_ListMembers_Handler,
+		},
+		{
+			MethodName: "UpdateMember",
+			Handler:    _GymService_UpdateMember_Handler,
+		},
+		{
+			MethodName: "CheckIn",
+			Handler:    _GymService_CheckIn_Handler,
+		},
+		{
+			MethodName: "GetMemberHistory",
+			Handler:    _GymService_GetMemberHistory_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

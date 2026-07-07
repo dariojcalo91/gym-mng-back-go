@@ -4,24 +4,54 @@ package gym;
 
 option go_package = "./proto";
 
+import "google/protobuf/timestamp.proto";
+import "api/proto/checkin.proto";
+
 service GymService {
-  // Dashboard: register a new member
+  // gym_id comes from autenticated context (JWT), never from request.
   rpc CreateMember (MemberRequest) returns (MemberResponse);
-  // Can the member Check-in?
-  rpc GetMemberStatus (IdRequest) returns (MemberResponse);
+  rpc ListMembers (ListMembersRequest) returns (ListMembersResponse);
+  rpc UpdateMember (UpdateMemberRequest) returns (MemberResponse);
+  rpc CheckIn (CheckInRequest) returns (CheckInResponse);
+  rpc GetMemberHistory (IdRequest) returns (MemberHistoryResponse);
+}
+
+enum MemberType {
+  MEMBER_TYPE_UNSPECIFIED = 0;
+  MEMBER_TYPE_MONTHLY = 1;
+  MEMBER_TYPE_OCCASIONAL = 2;
 }
 
 message MemberRequest {
   string name = 1;
-  string email = 2;
-  string plan = 3; // Ex: "Monthly", "VIP"
+  string phone = 2;
+  MemberType type = 3;
+  google.protobuf.Timestamp membership_start = 4; // only on type = MONTHLY
+  google.protobuf.Timestamp membership_end = 5;
 }
 
 message MemberResponse {
   string id = 1;
   string name = 2;
-  string status = 3; // "Active", "Expired"
-  string message = 4;
+  string phone = 3;
+  MemberType type = 4;
+  google.protobuf.Timestamp membership_end = 5;
+  bool membership_active = 6; // server-side calculated with Member.IsMembershipActive()
+  string message = 7;
+}
+
+message ListMembersRequest {} // no filtersfor now; pagination could be added if needed
+
+message ListMembersResponse {
+  repeated MemberResponse members = 1;
+}
+
+message UpdateMemberRequest {
+  string id = 1;
+  string name = 2;
+  string phone = 3;
+  google.protobuf.Timestamp membership_start = 4;
+  google.protobuf.Timestamp membership_end = 5;
 }
 
 message IdRequest {
