@@ -2,7 +2,7 @@
 
 # Build
 build:
-	go build -ldflags="-s -w" -o bin/gym-server ./cmd/main.go
+	go build -ldflags="-s -w" -o bin/gym-server ./cmd/server/main.go
 
 run:
 	go run ./cmd/main.go

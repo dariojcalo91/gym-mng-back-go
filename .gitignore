@@ -7,7 +7,6 @@ bin/
 *.dylib
 
 # The specific test script
-cmd/client_test/main.go
 
 # Environment Variables (SECURITY)
 .env

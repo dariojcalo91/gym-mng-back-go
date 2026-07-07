@@ -10,7 +10,7 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o gym-server ./cmd/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o gym-server ./cmd/server/main.go
 
 # --- STAGE 2: Final (Production) ---
 FROM alpine:3.21
