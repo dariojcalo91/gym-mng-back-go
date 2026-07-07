@@ -39,13 +39,16 @@ message LogoutResponse {
 message RegisterUserRequest {
   string username = 1;
   string password = 2;
-  string role = 3; // "ADMIN", "SUPER_USER", "TRAINER"
+  reserved 3;
+  reserved "role"; // differentiated roles out of MVP
   string email = 4;
+  string gym_name = 5; // create gym along user
 }
 
 message RegisterUserResponse {
   string user_id = 1;
-  string message = 2;
+  string gym_id = 2;
+  string message = 3;
 }
 
 message UserRequest {
@@ -56,4 +59,5 @@ message User {
   string id = 1;
   string username = 2;
   string role = 3;
+  string gym_id = 4;
 }

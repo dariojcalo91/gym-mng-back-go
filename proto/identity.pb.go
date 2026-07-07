@@ -219,8 +219,8 @@ type RegisterUserRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Username      string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
 	Password      string                 `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
-	Role          string                 `protobuf:"bytes,3,opt,name=role,proto3" json:"role,omitempty"` // "ADMIN", "SUPER_USER", "TRAINER"
 	Email         string                 `protobuf:"bytes,4,opt,name=email,proto3" json:"email,omitempty"`
+	GymName       string                 `protobuf:"bytes,5,opt,name=gym_name,json=gymName,proto3" json:"gym_name,omitempty"` // create gym along user
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -269,13 +269,6 @@ func (x *RegisterUserRequest) GetPassword() string {
 	return ""
 }
 
-func (x *RegisterUserRequest) GetRole() string {
-	if x != nil {
-		return x.Role
-	}
-	return ""
-}
-
 func (x *RegisterUserRequest) GetEmail() string {
 	if x != nil {
 		return x.Email
@@ -283,10 +276,18 @@ func (x *RegisterUserRequest) GetEmail() string {
 	return ""
 }
 
+func (x *RegisterUserRequest) GetGymName() string {
+	if x != nil {
+		return x.GymName
+	}
+	return ""
+}
+
 type RegisterUserResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	GymId         string                 `protobuf:"bytes,2,opt,name=gym_id,json=gymId,proto3" json:"gym_id,omitempty"`
+	Message       string                 `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -324,6 +325,13 @@ func (*RegisterUserResponse) Descriptor() ([]byte, []int) {
 func (x *RegisterUserResponse) GetUserId() string {
 	if x != nil {
 		return x.UserId
+	}
+	return ""
+}
+
+func (x *RegisterUserResponse) GetGymId() string {
+	if x != nil {
+		return x.GymId
 	}
 	return ""
 }
@@ -384,6 +392,7 @@ type User struct {
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
 	Role          string                 `protobuf:"bytes,3,opt,name=role,proto3" json:"role,omitempty"`
+	GymId         string                 `protobuf:"bytes,4,opt,name=gym_id,json=gymId,proto3" json:"gym_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -439,6 +448,13 @@ func (x *User) GetRole() string {
 	return ""
 }
 
+func (x *User) GetGymId() string {
+	if x != nil {
+		return x.GymId
+	}
+	return ""
+}
+
 var File_api_proto_identity_proto protoreflect.FileDescriptor
 
 const file_api_proto_identity_proto_rawDesc = "" +
@@ -453,21 +469,23 @@ const file_api_proto_identity_proto_rawDesc = "" +
 	"\rLogoutRequest\x12\x14\n" +
 	"\x05token\x18\x01 \x01(\tR\x05token\"*\n" +
 	"\x0eLogoutResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage\"w\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"\x8a\x01\n" +
 	"\x13RegisterUserRequest\x12\x1a\n" +
 	"\busername\x18\x01 \x01(\tR\busername\x12\x1a\n" +
-	"\bpassword\x18\x02 \x01(\tR\bpassword\x12\x12\n" +
-	"\x04role\x18\x03 \x01(\tR\x04role\x12\x14\n" +
-	"\x05email\x18\x04 \x01(\tR\x05email\"I\n" +
+	"\bpassword\x18\x02 \x01(\tR\bpassword\x12\x14\n" +
+	"\x05email\x18\x04 \x01(\tR\x05email\x12\x19\n" +
+	"\bgym_name\x18\x05 \x01(\tR\agymNameJ\x04\b\x03\x10\x04R\x04role\"`\n" +
 	"\x14RegisterUserResponse\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"&\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x15\n" +
+	"\x06gym_id\x18\x02 \x01(\tR\x05gymId\x12\x18\n" +
+	"\amessage\x18\x03 \x01(\tR\amessage\"&\n" +
 	"\vUserRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\"F\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\"]\n" +
 	"\x04User\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x12\n" +
-	"\x04role\x18\x03 \x01(\tR\x04role2p\n" +
+	"\x04role\x18\x03 \x01(\tR\x04role\x12\x15\n" +
+	"\x06gym_id\x18\x04 \x01(\tR\x05gymId2p\n" +
 	"\vAuthService\x12.\n" +
 	"\x05Login\x12\x11.gym.LoginRequest\x1a\x12.gym.LoginResponse\x121\n" +
 	"\x06Logout\x12\x12.gym.LogoutRequest\x1a\x13.gym.LogoutResponse2\x81\x01\n" +
