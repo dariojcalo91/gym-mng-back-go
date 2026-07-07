@@ -1,0 +1,1 @@
+ALTER TABLE users ADD COLUMN gym_id UUID REFERENCES gyms(id);

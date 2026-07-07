@@ -7,10 +7,11 @@ import (
 
 type User struct {
 	ID        string
+	GymID     string
 	Username  string
-	Password  string // Here the Bcrypt Hash will go
-	Email     string // Here the Encrypted email will go
-	Role      string // SUPER_USER, ADMIN, TRAINER
+	Password  string
+	Email     string
+	Role      string
 	CreatedAt time.Time
 }
 
